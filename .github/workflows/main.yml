@@ -32,34 +32,35 @@ jobs:
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools'
+          packages: platform-tools
+
+      - name: Extrair projeto VorteX
+        run: |
+          mkdir -p source
+          unzip -q Vortex2.zip -d source
 
       - name: Instalar componentes Android
         run: |
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
+          yes | sdkmanager --licenses || true
 
-      - name: Aceitar licencas Android
-        run: yes | sdkmanager --licenses || true
-
-      - name: Verificar projeto
+      - name: Verificar arquivos
         run: |
-          test -f settings.gradle
-          test -f build.gradle
-          test -f app/build.gradle
-          test -f app/src/main/AndroidManifest.xml
+          test -f source/settings.gradle
+          test -f source/build.gradle
+          test -f source/app/build.gradle
 
-      - name: Compilar VorteX Game Space
-        run: gradle --no-daemon assembleDebug
+      - name: Compilar VorteX
+        run: gradle -p source --no-daemon assembleDebug
 
       - name: Verificar APK
         run: |
-          ls -lh app/build/outputs/apk/debug/
-          test -f app/build/outputs/apk/debug/app-debug.apk
+          test -f source/app/build/outputs/apk/debug/app-debug.apk
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: VORTEX-GAME-SPACE-2.0-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: VORTEX-GAME-SPACE-2.0
+          path: source/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 7
