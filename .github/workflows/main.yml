@@ -1,12 +1,17 @@
-
-name: Compilar VorteX Game Space
+name: VorteX Game Space 2.0 - APK
 
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
+    name: Construir APK Android
     runs-on: ubuntu-latest
 
     steps:
@@ -25,17 +30,36 @@ jobs:
           gradle-version: '8.7'
 
       - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
 
-      - name: Instalar Android SDK 34
+      - name: Instalar componentes Android
         run: |
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
-      - name: Compilar VorteX
-        run: gradle assembleDebug
+      - name: Aceitar licencas Android
+        run: yes | sdkmanager --licenses || true
+
+      - name: Verificar projeto
+        run: |
+          test -f settings.gradle
+          test -f build.gradle
+          test -f app/build.gradle
+          test -f app/src/main/AndroidManifest.xml
+
+      - name: Compilar VorteX Game Space
+        run: gradle --no-daemon assembleDebug
+
+      - name: Verificar APK
+        run: |
+          ls -lh app/build/outputs/apk/debug/
+          test -f app/build/outputs/apk/debug/app-debug.apk
 
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: VorteX-Game-Space-APK
-          path: app/build/outputs/apk/debug/*.apk
+          name: VORTEX-GAME-SPACE-2.0-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7
